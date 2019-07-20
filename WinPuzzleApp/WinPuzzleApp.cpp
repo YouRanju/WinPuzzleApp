@@ -162,7 +162,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					wsprintf(text, _T("%d"), count);
 					SetWindowText(s_hwnd[y][x], text);
 				}	
-			}	
+			}
+
+			srand((unsigned)time(NULL));
+
+			int key = 0;
+			for (int i = 0; i < 100; ++i) {
+				key = VK_LEFT + (rand() % 4);
+				MoveBlock(key, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
+			}
 		}
     case WM_COMMAND:
         {
