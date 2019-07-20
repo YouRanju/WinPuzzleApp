@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "WinPuzzleApp.h"
+#include <time.h>
 
 #define MAX_LOADSTRING 100
 
@@ -194,8 +195,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (s_hwnd[i] != NULL) {
 					DestroyWindow(s_hwnd[i][j]);
 				}
-			}
-			
+			}	
 		}
         PostQuitMessage(0);
         break;
@@ -210,31 +210,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-void MoveBlock(WPARAM wParam, int *s_nCursorX, int *s_nCursorY, HWND (*s_hwnd)[5], int (*s_nXPos)[5], int (*s_nYPos)[5]) {
-	/*int XOffset = 0, YOffset = 0;
-
-	if (wParam == VK_RIGHT)
-		XOffset = -1;
-	else if (wParam == VK_LEFT)
-		XOffset = 1;
-	else if (wParam == VK_UP)
-		YOffset = 1;
-	else if (wParam == VK_DOWN)
-		YOffset = -1;
-		
-	if (*s_nCursorY + YOffset < 5 && *s_nCursorY + YOffset >= 0
-		&& *s_nCursorX + XOffset < 5 && *s_nCursorX + XOffset >= 0)
-	{
-		HWND hWnd = s_hwnd[*s_nCursorY + YOffset][*s_nCursorX + XOffset];
-		MoveWindow(hWnd, s_nXPos[*s_nCursorY][*s_nCursorX], s_nYPos[*s_nCursorY][*s_nCursorX], 100, 100, TRUE);
-
-		s_hwnd[*s_nCursorY][*s_nCursorX] = hWnd;
-		s_hwnd[*s_nCursorY + YOffset][*s_nCursorX + XOffset] = NULL;
-
-		*s_nCursorX += XOffset;
-		*s_nCursorY += YOffset;
-	}*/
-
+void MoveBlock(WPARAM wParam, int *s_nCursorX, int *s_nCursorY, HWND (*s_hwnd)[5], int (*s_nXPos)[5], int (*s_nYPos)[5]) 
+{
 	int XOffset = (wParam == VK_RIGHT) ? -1 : (wParam == VK_LEFT) ? 1 : 0;
 	int YOffset = (wParam == VK_DOWN) ? -1 : (wParam == VK_UP) ? 1 : 0;
 
