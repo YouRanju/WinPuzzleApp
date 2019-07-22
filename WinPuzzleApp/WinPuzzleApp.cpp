@@ -18,11 +18,11 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void MoveBlock(WPARAM wParam, int* s_nCursorX, int* s_nCursorY, HWND(*s_hwnd)[5], int(*s_nXPos)[5], int(*s_nYPos)[5]);
-int checkBlock();
+void checkBlock(HWND(*s_hwnd)[5], HWND hWnd);
 
 int original[25];
 int randomIndex[25];
-int key;
+int movecnt = 0;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -137,6 +137,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static int s_nCursorY;
 
 	int count = 0;
+	int key;
+
     switch (message)
     {
 	case WM_CREATE:
@@ -232,9 +234,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_KEYUP:
 		{
 			MoveBlock(wParam, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
-			if (s_hwnd[4][4] == NULL && checkBlock() == 1) {
-				MessageBox(hWnd, TEXT("게임 성공"), TEXT("정보"), MB_OK);
-			}
+			checkBlock(s_hwnd, hWnd);
 		}
 		break;
 	case WM_LBUTTONDOWN:
@@ -255,11 +255,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (absX + absY == 1 && absX <= 1 && absY <=1) {
 					int key = (XOffset == -1) ? VK_LEFT : (XOffset == 1) ? VK_RIGHT : (YOffset == -1) ? VK_UP : (YOffset == 1) ? VK_DOWN : 0;
 					MoveBlock(key, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
-				}
-			}
 
-			if (checkBlock() == 1) {
-				MessageBox(hWnd, TEXT("게임 성공"), TEXT("정보"), MB_OK);
+					checkBlock(s_hwnd, hWnd);
+				}
 			}
 		}
     default:
@@ -290,20 +288,28 @@ void MoveBlock(WPARAM wParam, int* s_nCursorX, int* s_nCursorY, HWND(*s_hwnd)[5]
 
 		*s_nCursorX += XOffset;
 		*s_nCursorY += YOffset;
+
+		movecnt++;
 	}
 }
 
-int checkBlock() 
+void checkBlock(HWND (*s_hwnd)[5], HWND hWnd )
 {
 	int count = 0;
-	for (int i = 0; i < 25; i++) {
-		if (original[i] == randomIndex[i])
-			count++;
-	}
 
-	if (count >= 24) {
-		return 1;
+	if (s_hwnd[4][4] == NULL) {
+		for (int i = 0; i < 25; i++) {
+			if (original[i] == randomIndex[i])
+				count++;
+		}
+
+		if (count >= 24) {
+			TCHAR text[30];
+			wsprintf(text, _T("게임성공\n움직인 횟수: %d"), movecnt);
+			MessageBox(hWnd, text, TEXT("정보"), MB_OK);
+		}
 	}
+	
 }
 
 // 정보 대화 상자의 메시지 처리기입니다.
