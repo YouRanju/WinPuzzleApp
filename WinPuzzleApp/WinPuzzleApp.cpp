@@ -23,6 +23,7 @@ void checkBlock(HWND(*s_hwnd)[5], HWND hWnd);
 int original[25];
 int randomIndex[25];
 int movecnt = 0;
+int timer = 0;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -143,6 +144,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 	case WM_CREATE:
 		{
+			SetTimer(hWnd, 0, 1000, NULL);
+			
 			srand((unsigned)time(NULL));
 
 			for (int i = 0; i < 25; ++i) {
@@ -196,6 +199,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}*/
 			}
 		}
+	case WM_TIMER:
+		{
+			timer++;
+
+			if (timer > 200) {
+				KillTimer(hWnd, 0);
+				MessageBox(hWnd, TEXT("게임 실패..."), TEXT("정보"), MB_OK);
+				exit(0);
+			}
+
+			InvalidateRect(hWnd, NULL, true);
+		}
+		break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -218,6 +234,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+			TCHAR text[30];
+			wsprintf(text, _T("남은시간: %d"), 200-timer);
+			TextOut(hdc, 570, 20, text, lstrlen(text));
+			wsprintf(text, _T("움직인 횟수: %d"), movecnt);
+			TextOut(hdc, 570, 40, text, lstrlen(text));
+
             EndPaint(hWnd, &ps);
         }
         break;
@@ -229,12 +251,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 			}	
 		}
+		
         PostQuitMessage(0);
         break;
 	case WM_KEYUP:
 		{
 			MoveBlock(wParam, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
 			checkBlock(s_hwnd, hWnd);
+			InvalidateRect(hWnd, NULL, true);
 		}
 		break;
 	case WM_LBUTTONDOWN:
@@ -257,6 +281,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					MoveBlock(key, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
 
 					checkBlock(s_hwnd, hWnd);
+					InvalidateRect(hWnd, NULL, true);
 				}
 			}
 		}
