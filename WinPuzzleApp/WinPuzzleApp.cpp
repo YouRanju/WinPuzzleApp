@@ -18,6 +18,11 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void MoveBlock(WPARAM wParam, int* s_nCursorX, int* s_nCursorY, HWND(*s_hwnd)[5], int(*s_nXPos)[5], int(*s_nYPos)[5]);
+int checkBlock();
+
+int original[25];
+int randomIndex[25];
+int key;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -136,6 +141,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 	case WM_CREATE:
 		{
+			srand((unsigned)time(NULL));
+
+			for (int i = 0; i < 25; ++i) {
+				original[i] = i + 1;
+				randomIndex[i] = original[i];
+			}
+
+			for (int i = 0; i < 24; ++i) {
+				key = rand() % 25;
+
+				if (randomIndex[key] >= 25) continue;
+				
+				int temp = randomIndex[i];
+				randomIndex[i] = randomIndex[key];
+				randomIndex[key] = temp;
+			}
+
 			for (int y = 0; y < 5; y++) 
 			{
 				for (int x = 0; x < 5; x++) 
@@ -159,17 +181,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					count++;
 					
 					TCHAR text[10];
-					wsprintf(text, _T("%d"), count);
+					wsprintf(text, _T("%d"), randomIndex[count-1]);
 					SetWindowText(s_hwnd[y][x], text);
 				}	
-			}
 
-			srand((unsigned)time(NULL));
+				/*srand((unsigned)time(NULL));
 
-			int key = 0;
-			for (int i = 0; i < 100; ++i) {
-				key = VK_LEFT + (rand() % 4);
-				MoveBlock(key, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
+				int key = 0;
+				for (int i = 0; i < 100; ++i) {
+					key = VK_LEFT + (rand() % 4);
+					MoveBlock(key, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
+				}*/
 			}
 		}
     case WM_COMMAND:
@@ -210,15 +232,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_KEYUP:
 		{
 			MoveBlock(wParam, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
+			if (s_hwnd[4][4] == NULL && checkBlock() == 1) {
+				MessageBox(hWnd, TEXT("게임 성공"), TEXT("정보"), MB_OK);
+			}
 		}
 		break;
+	case WM_LBUTTONDOWN:
+		{
+			int x = LOWORD(lParam);
+			int y = HIWORD(lParam);
+
+			int tileX = (x - 10) / 110;
+			int tileY = (y - 10) / 110;
+
+			if (tileX >= 0 && tileX < 5 && tileY >= 0 && tileY < 5) {
+				int XOffset = s_nCursorX - tileX;
+				int YOffset = s_nCursorY - tileY;
+
+				int absX = abs(XOffset);
+				int absY = abs(YOffset);
+
+				if (absX + absY == 1 && absX <= 1 && absY <=1) {
+					int key = (XOffset == -1) ? VK_LEFT : (XOffset == 1) ? VK_RIGHT : (YOffset == -1) ? VK_UP : (YOffset == 1) ? VK_DOWN : 0;
+					MoveBlock(key, &s_nCursorX, &s_nCursorY, s_hwnd, s_nXPos, s_nYPos);
+				}
+			}
+
+			if (checkBlock() == 1) {
+				MessageBox(hWnd, TEXT("게임 성공"), TEXT("정보"), MB_OK);
+			}
+		}
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
 }
 
-void MoveBlock(WPARAM wParam, int *s_nCursorX, int *s_nCursorY, HWND (*s_hwnd)[5], int (*s_nXPos)[5], int (*s_nYPos)[5]) 
+void MoveBlock(WPARAM wParam, int* s_nCursorX, int* s_nCursorY, HWND(*s_hwnd)[5], int(*s_nXPos)[5], int(*s_nYPos)[5])
 {
 	int XOffset = (wParam == VK_RIGHT) ? -1 : (wParam == VK_LEFT) ? 1 : 0;
 	int YOffset = (wParam == VK_DOWN) ? -1 : (wParam == VK_UP) ? 1 : 0;
@@ -226,6 +276,12 @@ void MoveBlock(WPARAM wParam, int *s_nCursorX, int *s_nCursorY, HWND (*s_hwnd)[5
 	if (*s_nCursorY + YOffset < 5 && *s_nCursorY + YOffset >= 0
 		&& *s_nCursorX + XOffset < 5 && *s_nCursorX + XOffset >= 0)
 	{
+		int tmp = randomIndex[((*s_nCursorY+YOffset)*5) + (*s_nCursorX+XOffset)];
+
+		randomIndex[((*s_nCursorY + YOffset) * 5) + (*s_nCursorX + XOffset)]
+			= randomIndex[(*s_nCursorY * 5) + (*s_nCursorX + XOffset)];
+		randomIndex[(*s_nCursorY * 5) + *s_nCursorX] = tmp;
+		
 		HWND hWnd = s_hwnd[*s_nCursorY + YOffset][*s_nCursorX + XOffset];
 		MoveWindow(hWnd, s_nXPos[*s_nCursorY][*s_nCursorX], s_nYPos[*s_nCursorY][*s_nCursorX], 100, 100, TRUE);
 
@@ -234,6 +290,19 @@ void MoveBlock(WPARAM wParam, int *s_nCursorX, int *s_nCursorY, HWND (*s_hwnd)[5
 
 		*s_nCursorX += XOffset;
 		*s_nCursorY += YOffset;
+	}
+}
+
+int checkBlock() 
+{
+	int count = 0;
+	for (int i = 0; i < 25; i++) {
+		if (original[i] == randomIndex[i])
+			count++;
+	}
+
+	if (count >= 24) {
+		return 1;
 	}
 }
 
